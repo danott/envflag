@@ -46,9 +46,12 @@ const (
 	EnvfmtProgram = "%[2]s_%[1]s" // Envfmt for program name and flag name
 )
 
-var (
-	envfmt = EnvfmtFlag
-)
+// Configure how flag names are translated to environment variable names.
+// Accepts a string to be interpolated using Sprintf.
+//
+//  "%[1]s" - the flag name
+//  "%[2]s" - the program name
+var Envfmt = EnvfmtFlag
 
 // Define your flags with package flag. Call envflag.Parse() in place of
 // flag.Parse() to set flags via environment variables (if they weren't set via
@@ -63,15 +66,6 @@ func Parse() {
 			flag.Set(name, value)
 		}
 	}
-}
-
-// Configure how flag names are translated to environment variable names.
-// Accepts a string to be interpolated using Sprintf.
-//
-//  "%[1]s" - the flag name
-//  "%[2]s" - the program name
-func Envfmt(s string) {
-	envfmt = s
 }
 
 // Identical to os.Environ, but limited to the environment variable equivalents
@@ -129,7 +123,10 @@ func getenv(name string) (s string, ok bool) {
 
 // To be unix'y, we translate flagnames to their uppercase equivalents.
 func flagAsEnv(name string) string {
-	return strings.ToUpper(fmt.Sprintf(envfmt, name, programName()))
+	name = strings.ToUpper(fmt.Sprintf(Envfmt, name, programName()))
+	name = strings.Replace(name, ".", "_", -1)
+	name = strings.Replace(name, "-", "_", -1)
+	return name
 }
 
 // The name of the currently running program
