@@ -1,14 +1,14 @@
 // Set flags via environment variables.
 //
 // Flags are still defined using the stdlib package flag. The only change to
-// your code is calling flagz.Parse() in place of flag.Parse()
+// your code is calling envflag.Parse() in place of flag.Parse()
 //
 // If your flag wasn't set via command-line argument, an equivalent environment
 // variable will be used.
 //
 // Precedence is: command-line agrument, environment variable, default.
 //
-// To use, call flagz.Parse() in place of flag.Parse(). That's it.
+// To use, call envflag.Parse() in place of flag.Parse(). That's it.
 //
 // As an example, you can create a new file (main.go)
 //
@@ -18,13 +18,13 @@
 //  	"flag"
 //  	"log"
 //
-//  	"github.com/danott/flagz"
+//  	"github.com/danott/envflag"
 //  )
 //
 //  func main() {
 //  	var i int
 //  	flag.IntVar(&i, "port", 2112, "Run on this port.")
-//  	flagz.Parse()
+//  	envflag.Parse()
 //  	log.Printf("port: %v", i)
 //  }
 //
@@ -34,7 +34,7 @@
 //  go run main.go --port=2113
 //  PORT=2114 go run main.go
 //  PORT=2114 go run main.go --port=2113
-package flagz
+package envflag
 
 import (
 	"flag"
@@ -52,7 +52,7 @@ var (
 	envfmt = EnvfmtFlag
 )
 
-// Define your flags with package flag. Call flagz.Parse() in place of
+// Define your flags with package flag. Call envflag.Parse() in place of
 // flag.Parse() to set flags via environment variables (if they weren't set via
 // command-line arguments).
 func Parse() {
