@@ -1,4 +1,8 @@
+# package envflag
+
 Set flags via environment variables.
+
+## Usage
 
 Flags are still defined using the stdlib `package "flag"`. The only change to your code is calling `envflag.Parse()` in place of `flag.Parse()`.
 
@@ -6,7 +10,7 @@ If your flag wasn't set via command-line argument, an equivalent environment var
 
 Precedence is: command-line agrument, environment variable, default.
 
-As an example, you can create a new program (main.go)
+## Example
 
 ```go
 package main
