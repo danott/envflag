@@ -1,14 +1,12 @@
 // Set flags via environment variables.
 //
 // Flags are still defined using the stdlib package flag. The only change to
-// your code is calling envflag.Parse() in place of flag.Parse()
+// your code is calling envflag.Parse() in place of flag.Parse().
 //
 // If your flag wasn't set via command-line argument, an equivalent environment
 // variable will be used.
 //
 // Precedence is: command-line agrument, environment variable, default.
-//
-// To use, call envflag.Parse() in place of flag.Parse(). That's it.
 //
 // As an example, you can create a new file (main.go)
 //
