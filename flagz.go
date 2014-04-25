@@ -1,11 +1,14 @@
-// Flagz adds automatic detection of environment variables to the flag
-// package. It's a convenience for when you would like to arbitrarily set
-// configuration via command-line arguments or environment variables.
+// Set flags via environment variables.
 //
-// Note: environment variables are the strings.ToUpper() version of the flag
-// name by convention.
+// Flags are still defined using the stdlib package flag. The only change to
+// your code is calling flagz.Parse() in place of flag.Parse()
 //
-// To use, call flagz.Parse() in place of flag.Parse()
+// If your flag wasn't set via command-line argument, an equivalent environment
+// variable will be used.
+//
+// Precedence is: command-line agrument, environment variable, default.
+//
+// To use, call flagz.Parse() in place of flag.Parse(). That's it.
 //
 // As an example, you can create a new file (main.go)
 //
@@ -20,7 +23,7 @@
 //
 //  func main() {
 //  	var i int
-//  	flag.IntVar(&i, "port", 2012, "This is the port we'll run on")
+//  	flag.IntVar(&i, "port", 2112, "Run on this port.")
 //  	flagz.Parse()
 //  	log.Printf("port: %v", i)
 //  }
@@ -28,32 +31,66 @@
 // Run your example to see the precedence in action:
 //
 //  go run main.go
-//  go run main.go --port=2013
-//  PORT=2014 go run main.go
-//  PORT=2014 go run main.go --port=2013
+//  go run main.go --port=2113
+//  PORT=2114 go run main.go
+//  PORT=2114 go run main.go --port=2113
 package flagz
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"strings"
 )
 
-// Setup your flags with the flag package as normal. Just call flagz.Parse
-// instead of flag.Parse to get the bonus of reading environment variables too.
+const (
+	EnvfmtFlag    = "%[1]s"       // Envfmt for flag name
+	EnvfmtProgram = "%[2]s_%[1]s" // Envfmt for program name and flag name
+)
+
+var (
+	envfmt = EnvfmtFlag
+)
+
+// Define your flags with package flag. Call flagz.Parse() in place of
+// flag.Parse() to set flags via environment variables (if they weren't set via
+// command-line arguments).
 func Parse() {
-	flag.Parse()
+	if !flag.Parsed() {
+		flag.Parse()
+	}
 
 	for _, name := range defaultedFlags() {
-		if value, ok := getenv(strings.ToUpper(name)); ok {
+		if value, ok := getenv(name); ok {
 			flag.Set(name, value)
 		}
 	}
 }
 
+// Configure how flag names are translated to environment variable names.
+// Accepts a string to be interpolated using Sprintf.
+//
+//  "%[1]s" - the flag name
+//  "%[2]s" - the program name
+func Envfmt(s string) {
+	envfmt = s
+}
+
+// Identical to os.Environ, but limited to the environment variable equivalents
+// for the flags your program cares about.
+func Environ() []string {
+	s := make([]string, 0)
+
+	flag.VisitAll(func(f *flag.Flag) {
+		s = append(s, flagAsEnv(f.Name)+"="+os.Getenv(flagAsEnv(f.Name)))
+	})
+
+	return s
+}
+
 // Flags that were not set via command-line arguments, and have defaulted. It's
 // smart enough to respect a flag that was set to the default value via
-// command-line arguments.
+// command-line arguments. Must be called after flag.Parse()
 func defaultedFlags() []string {
 	m := make(map[string]bool)
 
@@ -84,9 +121,21 @@ func getenv(name string) (s string, ok bool) {
 		m[split[0]] = true
 	}
 
+	name = flagAsEnv(name)
 	if _, ok = m[name]; ok {
 		s = os.Getenv(name)
 	}
 
 	return
+}
+
+// To be unix'y, we translate flagnames to their uppercase equivalents.
+func flagAsEnv(name string) string {
+	return strings.ToUpper(fmt.Sprintf(envfmt, name, programName()))
+}
+
+// The name of the currently running program
+func programName() string {
+	s := strings.Split(os.Args[0], "/")
+	return s[len(s)-1]
 }
