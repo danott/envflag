@@ -42,28 +42,33 @@ import (
 )
 
 const (
-	EnvfmtFlag    = "%[1]s"       // Envfmt for flag name
-	EnvfmtProgram = "%[2]s_%[1]s" // Envfmt for program name and flag name
+	EnvfmtFlag = "%[1]s" // Envfmt for flag name
 )
 
 // Configure how flag names are translated to environment variable names.
 // Accepts a string to be interpolated using Sprintf.
 //
 //  "%[1]s" - the flag name
-//  "%[2]s" - the program name
 var Envfmt = EnvfmtFlag
+
+// The flag.FlagSet to act on.
+var FlagSet = flag.CommandLine
 
 // Define your flags with package flag. Call envflag.Parse() in place of
 // flag.Parse() to set flags via environment variables (if they weren't set via
 // command-line arguments).
 func Parse() {
-	if !flag.Parsed() {
-		flag.Parse()
+	parse(os.Args[1:])
+}
+
+func parse(args []string) {
+	if !FlagSet.Parsed() {
+		FlagSet.Parse(args)
 	}
 
 	for _, name := range defaultedFlags() {
 		if value, ok := getenv(name); ok {
-			flag.Set(name, value)
+			FlagSet.Set(name, value)
 		}
 	}
 }
@@ -73,8 +78,10 @@ func Parse() {
 func Environ() []string {
 	s := make([]string, 0)
 
-	flag.VisitAll(func(f *flag.Flag) {
-		s = append(s, flagAsEnv(f.Name)+"="+os.Getenv(flagAsEnv(f.Name)))
+	FlagSet.VisitAll(func(f *flag.Flag) {
+		if value, ok := getenv(f.Name); ok {
+			s = append(s, flagAsEnv(f.Name)+"="+value)
+		}
 	})
 
 	return s
@@ -86,11 +93,11 @@ func Environ() []string {
 func defaultedFlags() []string {
 	m := make(map[string]bool)
 
-	flag.VisitAll(func(f *flag.Flag) {
+	FlagSet.VisitAll(func(f *flag.Flag) {
 		m[f.Name] = true
 	})
 
-	flag.Visit(func(f *flag.Flag) {
+	FlagSet.Visit(func(f *flag.Flag) {
 		delete(m, f.Name)
 	})
 
@@ -123,14 +130,8 @@ func getenv(name string) (s string, ok bool) {
 
 // To be unix'y, we translate flagnames to their uppercase equivalents.
 func flagAsEnv(name string) string {
-	name = strings.ToUpper(fmt.Sprintf(Envfmt, name, programName()))
+	name = strings.ToUpper(fmt.Sprintf(Envfmt, name))
 	name = strings.Replace(name, ".", "_", -1)
 	name = strings.Replace(name, "-", "_", -1)
 	return name
-}
-
-// The name of the currently running program
-func programName() string {
-	s := strings.Split(os.Args[0], "/")
-	return s[len(s)-1]
 }
