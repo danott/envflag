@@ -36,19 +36,13 @@ package envflag
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"strings"
 )
 
-const (
-	EnvfmtFlag = "%[1]s" // Envfmt for flag name
-)
-
-// Configure how flag names are translated to environment variable names.
-// Accepts a string to be interpolated using Sprintf. Use "%[1]s" for the flag
-// name.
-var Envfmt = EnvfmtFlag
+// Configure how flag names are translated to environment variable names by
+// prefixing the flag name.
+var EnvPrefix = ""
 
 // The flag.FlagSet to act on.
 var FlagSet = flag.CommandLine
@@ -117,7 +111,7 @@ func getenv(name string) (s string, ok bool) {
 
 // To be unix'y, we translate flagnames to their uppercase equivalents.
 func flagAsEnv(name string) string {
-	name = strings.ToUpper(fmt.Sprintf(Envfmt, name))
+	name = strings.ToUpper(EnvPrefix + name)
 	name = strings.Replace(name, ".", "_", -1)
 	name = strings.Replace(name, "-", "_", -1)
 	return name

@@ -12,7 +12,7 @@ var (
 
 func setup() {
 	os.Clearenv()
-	Envfmt = EnvfmtFlag
+	EnvPrefix = ""
 	FlagSet = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	FlagSet.StringVar(&name, "name", "Michael", "This is a member of the bluth family")
 }
@@ -31,9 +31,9 @@ func TestParse(t *testing.T) {
 func TestParseWithCustomEnvfmt(t *testing.T) {
 	setup()
 
-	Envfmt = "CUSTOM_%[1]s_FORMAT"
+	EnvPrefix = "CUSTOM_"
 	os.Setenv("NAME", "Gob")
-	os.Setenv("CUSTOM_NAME_FORMAT", "Tobias")
+	os.Setenv("CUSTOM_NAME", "Tobias")
 	Parse()
 
 	if name != "Tobias" {
