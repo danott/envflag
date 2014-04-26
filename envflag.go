@@ -46,9 +46,8 @@ const (
 )
 
 // Configure how flag names are translated to environment variable names.
-// Accepts a string to be interpolated using Sprintf.
-//
-//  "%[1]s" - the flag name
+// Accepts a string to be interpolated using Sprintf. Use "%[1]s" for the flag
+// name.
 var Envfmt = EnvfmtFlag
 
 // The flag.FlagSet to act on.
@@ -59,18 +58,6 @@ var FlagSet = flag.CommandLine
 // command-line arguments).
 func Parse() {
 	parse(os.Args[1:])
-}
-
-func parse(args []string) {
-	if !FlagSet.Parsed() {
-		FlagSet.Parse(args)
-	}
-
-	for _, name := range defaultedFlags() {
-		if value, ok := getenv(name); ok {
-			FlagSet.Set(name, value)
-		}
-	}
 }
 
 // Identical to os.Environ, but limited to the environment variable equivalents
@@ -134,4 +121,17 @@ func flagAsEnv(name string) string {
 	name = strings.Replace(name, ".", "_", -1)
 	name = strings.Replace(name, "-", "_", -1)
 	return name
+}
+
+// Call Parse() on the FlagSet
+func parse(args []string) {
+	if !FlagSet.Parsed() {
+		FlagSet.Parse(args)
+	}
+
+	for _, name := range defaultedFlags() {
+		if value, ok := getenv(name); ok {
+			FlagSet.Set(name, value)
+		}
+	}
 }
