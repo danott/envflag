@@ -77,6 +77,6 @@ func TestEnvironSet(t *testing.T) {
 	os.Setenv("MONEY_IN_THE_BANANA_STAND", "1")
 
 	if len(Environ()) != 1 {
-		t.Errorf("There shouldn only be one thing herone thing here %v", Environ())
+		t.Errorf("There should only be one thing here %v", Environ())
 	}
 }
